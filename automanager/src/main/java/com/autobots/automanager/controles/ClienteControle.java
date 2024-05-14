@@ -3,6 +3,8 @@ package com.autobots.automanager.controles;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,18 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autobots.automanager.entidades.Cliente;
-import com.autobots.automanager.entidades.Documento;
 import com.autobots.automanager.entidades.Endereco;
-import com.autobots.automanager.entidades.Telefone;
+import com.autobots.automanager.modelo.AdicionadorLinkCliente;
 import com.autobots.automanager.modelo.ClienteAtualizador;
 import com.autobots.automanager.modelo.ClienteSelecionador;
-import com.autobots.automanager.modelo.DocumentoAtualizador;
-import com.autobots.automanager.modelo.DocumentoCadastrador;
-import com.autobots.automanager.modelo.DocumentoExcluidor;
 import com.autobots.automanager.modelo.EnderecoAtualizador;
-import com.autobots.automanager.modelo.TelefoneAtualizador;
-import com.autobots.automanager.modelo.TelefoneCadastrador;
-import com.autobots.automanager.modelo.TelefoneExcluidor;
 import com.autobots.automanager.repositorios.ClienteRepositorio;
 
 @RestController
@@ -36,23 +31,35 @@ public class ClienteControle {
 	
 	@Autowired
 	private ClienteSelecionador selecionador;
+	
+	@Autowired
+	private AdicionadorLinkCliente adicionadorLink;
 
 	@GetMapping("/cliente/{id}")
-	public Cliente obterCliente(@PathVariable long id) {
+	public ResponseEntity<List<Cliente>> obterCliente(@PathVariable long id) {
 		List<Cliente> clientes = repositorio.findAll();
-		return selecionador.selecionar(clientes, id);
-	}
-	
-	@GetMapping("/cliente/endereco/{id}")
-	public Endereco obterClienteEndereco(@PathVariable long id) {
-		List<Cliente> clientes = repositorio.findAll();
-		return selecionador.selecionar(clientes, id).getEndereco();
+		Cliente cliente = selecionador.selecionar(clientes, id);
+		if (cliente == null) {
+			ResponseEntity<List<Cliente>> resposta = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			return resposta;
+		} else {
+			adicionadorLink.adicionarLink(clientes);
+			ResponseEntity<List<Cliente>> resposta = new ResponseEntity<>(clientes, HttpStatus.FOUND);
+			return resposta;
+		}
 	}
 
 	@GetMapping("/clientes")
-	public List<Cliente> obterClientes() {
+	public ResponseEntity<List<Cliente>> obterClientes() {
 		List<Cliente> clientes = repositorio.findAll();
-		return clientes;
+		if (clientes.isEmpty()) {
+			ResponseEntity<List<Cliente>> resposta = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			return resposta;
+		} else {
+			adicionadorLink.adicionarLink(clientes);
+			ResponseEntity<List<Cliente>> resposta = new ResponseEntity<>(clientes, HttpStatus.FOUND);
+			return resposta;
+		}
 	}
 
 	@PostMapping("/cadastro")
