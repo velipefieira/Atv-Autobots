@@ -26,7 +26,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@EqualsAndHashCode(exclude = { "cliente", "funcionario", "veiculo" }, callSuper=false)
+@EqualsAndHashCode(exclude = { "cliente", "vendedor", "veiculo" }, callSuper=false)
 @Entity
 public class Venda extends RepresentationModel<Venda>{
 	@Id
@@ -45,7 +45,7 @@ public class Venda extends RepresentationModel<Venda>{
 	
 	@ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
 	@JsonIgnoreProperties(value = { "vendas" })
-	private Usuario funcionario;
+	private Usuario vendedor;
 	
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
 	@JsonManagedReference

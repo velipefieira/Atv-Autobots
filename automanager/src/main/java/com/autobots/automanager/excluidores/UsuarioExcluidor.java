@@ -41,8 +41,8 @@ public class UsuarioExcluidor {
 					venda.setCliente(null);
 					vendaRepositorio.save(venda);
 				}
-				if(venda.getFuncionario() == usuario) {
-					venda.setFuncionario(null);
+				if(venda.getVendedor() == usuario) {
+					venda.setVendedor(null);
 					vendaRepositorio.save(venda);
 				}
 				usuario.getVendas().remove(venda);

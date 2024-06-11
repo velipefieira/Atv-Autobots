@@ -30,9 +30,9 @@ public class VendaExcluidor {
 					venda.getCliente().getVendas().remove(venda);
 					usuarioRepositorio.save(cliente);
 				}
-				if(venda.getFuncionario() != null) {
-					Usuario funcionario = venda.getFuncionario();
-					venda.getFuncionario().getVendas().remove(venda);
+				if(venda.getVendedor() != null) {
+					Usuario funcionario = venda.getVendedor();
+					venda.getVendedor().getVendas().remove(venda);
 					usuarioRepositorio.save(funcionario);
 					
 				}

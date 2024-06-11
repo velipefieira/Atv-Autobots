@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +25,7 @@ import com.autobots.automanager.entidades.CredencialCodigoBarra;
 import com.autobots.automanager.entidades.CredencialUsuarioSenha;
 import com.autobots.automanager.entidades.Usuario;
 import com.autobots.automanager.excluidores.CredencialExcluidor;
+import com.autobots.automanager.modelos.VerificadorPermissao;
 import com.autobots.automanager.atualizadores.CredencialAtualizadorCodigoBarra;
 import com.autobots.automanager.atualizadores.CredencialAtualizadorUsuarioSenha;
 import com.autobots.automanager.cadastradores.CredencialCodigoBarraCadastrador;
@@ -57,7 +60,11 @@ public class CredencialControle {
 	
 	@Autowired
 	private UsuarioSelecionador usuarioSelecionador;
+	
+	@Autowired
+	private VerificadorPermissao verificadorPermissao;
 
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@GetMapping("/usuariosenha/{id}")
 	public ResponseEntity<CredencialUsuarioSenha> obterCredencialUsuarioSenha(@PathVariable long id) {
 		CredencialUsuarioSenha credencial = repositorioUsuarioSenha.findById(id).orElse(null);
@@ -71,6 +78,7 @@ public class CredencialControle {
 		}
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@GetMapping("/codigobarra/{id}")
 	public ResponseEntity<Credencial> obterCredencialCodigoBarra(@PathVariable long id) {
 		CredencialCodigoBarra credencial = repositorioCodigoBarra.findById(id).orElse(null);
@@ -84,6 +92,7 @@ public class CredencialControle {
 		}
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@GetMapping("/usuariosenha/credenciais")
 	public ResponseEntity<List<CredencialUsuarioSenha>> obterCredenciaisUsuarioSenha() {
 		List<CredencialUsuarioSenha> credenciais = repositorioUsuarioSenha.findAll();
@@ -97,6 +106,7 @@ public class CredencialControle {
 		}
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@GetMapping("/codigobarra/credenciais")
 	public ResponseEntity<List<CredencialCodigoBarra>> obterCredenciaisCodigoBarra() {
 		List<CredencialCodigoBarra> credenciais = repositorioCodigoBarra.findAll();
@@ -110,10 +120,21 @@ public class CredencialControle {
 		}
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'VENDEDOR', 'CLIENTE')")
 	@GetMapping("/usuarosenha/credenciais/{id}")
-	public ResponseEntity<List<CredencialUsuarioSenha>> obterUsuarioCredenciaisUsuarioSenha(@PathVariable long id) {
+	public ResponseEntity<List<CredencialUsuarioSenha>> obterUsuarioCredenciaisUsuarioSenha(@PathVariable long id, Authentication authentication) {
 		List<Usuario> usuarios = usuarioRepositorio.findAll();
 		Usuario usuario = usuarioSelecionador.selecionar(usuarios, id);
+		
+		String username = authentication.getName();
+	    Usuario usuarioLogado = usuarioSelecionador.selecionadorPorUsername(usuarios, username);
+	    
+	    boolean permissao = verificadorPermissao.verificar(usuarioLogado.getPerfis(),usuario.getPerfis());
+	    
+	    if (permissao == false) {
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+	    }
+	    
 		List<CredencialUsuarioSenha> credenciais = usuario.getCredenciaisUsuarioSenha().stream().collect(Collectors.toList());
 		if (credenciais.isEmpty()) {
 			ResponseEntity<List<CredencialUsuarioSenha>> resposta = new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -125,10 +146,20 @@ public class CredencialControle {
 		}
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'VENDEDOR', 'CLIENTE')")
 	@GetMapping("/codigobarra/credenciais/{id}")
-	public ResponseEntity<List<CredencialCodigoBarra>> obterUsuarioCredenciaisCodigoBarra(@PathVariable long id) {
+	public ResponseEntity<List<CredencialCodigoBarra>> obterUsuarioCredenciaisCodigoBarra(@PathVariable long id, Authentication authentication) {
 		List<Usuario> usuarios = usuarioRepositorio.findAll();
 		Usuario usuario = usuarioSelecionador.selecionar(usuarios, id);
+		
+		String username = authentication.getName();
+	    Usuario usuarioLogado = usuarioSelecionador.selecionadorPorUsername(usuarios, username);
+	    
+	    boolean permissao = verificadorPermissao.verificar(usuarioLogado.getPerfis(),usuario.getPerfis());
+	    
+	    if (permissao == false) {
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+	    }
 		List<CredencialCodigoBarra> credenciais = usuario.getCredenciaisCodigoBarra().stream().collect(Collectors.toList());
 		if (credenciais.isEmpty()) {
 			ResponseEntity<List<CredencialCodigoBarra>> resposta = new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -140,61 +171,109 @@ public class CredencialControle {
 		}
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'VENDEDOR')")
 	@PostMapping("/cadastro/usuariosenha/{id}")
-	public void cadastrarCredencialUsuarioSenha(@RequestBody List<CredencialUsuarioSenha> credencial, @PathVariable long id) {
-		Usuario usuario = usuarioRepositorio.getById(id);
-		CredencialUsuarioSenhaCadastrador cadastrador = new CredencialUsuarioSenhaCadastrador();
-		cadastrador.cadastrar(usuario, credencial);
-		usuarioRepositorio.save(usuario);
-	}
-	
-	@PostMapping("/cadastro/codigobarra/{id}")
-	public void cadastrarCredencialCodigoBarra(@RequestBody List<CredencialCodigoBarra> credencial, @PathVariable long id) {
-		Usuario usuario = usuarioRepositorio.getById(id);
-		CredencialCodigoBarraCadastrador cadastrador = new CredencialCodigoBarraCadastrador();
-		cadastrador.cadastrar(usuario, credencial);
-		usuarioRepositorio.save(usuario);
-	}
-
-	@PutMapping("/atualizar/usuariosenha/usuario/{id}")
-	public void atualizarUsuarioCredencialUsuarioSenha(@RequestBody List<CredencialUsuarioSenha> atualizacao, @PathVariable long id) {
+	public ResponseEntity<Credencial> cadastrarCredencialUsuarioSenha(@RequestBody List<CredencialUsuarioSenha> credencial, @PathVariable long id, Authentication authentication) {
 		List<Usuario> usuarios = usuarioRepositorio.findAll();
 		Usuario usuario = usuarioSelecionador.selecionar(usuarios, id);
+		
+		String username = authentication.getName();
+	    Usuario usuarioLogado = usuarioSelecionador.selecionadorPorUsername(usuarios, username);
+	    
+	    boolean permissao = verificadorPermissao.verificar(usuarioLogado.getPerfis(),usuario.getPerfis());
+	    
+	    if (permissao == false) {
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+	    }		CredencialUsuarioSenhaCadastrador cadastrador = new CredencialUsuarioSenhaCadastrador();
+		cadastrador.cadastrar(usuario, credencial);
+		usuarioRepositorio.save(usuario);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+	
+	@PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'VENDEDOR')")
+	@PostMapping("/cadastro/codigobarra/{id}")
+	public ResponseEntity<Credencial> cadastrarCredencialCodigoBarra(@RequestBody List<CredencialCodigoBarra> credencial, @PathVariable long id, Authentication authentication) {
+		List<Usuario> usuarios = usuarioRepositorio.findAll();
+		Usuario usuario = usuarioSelecionador.selecionar(usuarios, id);
+		
+		String username = authentication.getName();
+	    Usuario usuarioLogado = usuarioSelecionador.selecionadorPorUsername(usuarios, username);
+	    
+	    boolean permissao = verificadorPermissao.verificar(usuarioLogado.getPerfis(),usuario.getPerfis());
+	    
+	    if (permissao == false) {
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+	    }		CredencialCodigoBarraCadastrador cadastrador = new CredencialCodigoBarraCadastrador();
+		cadastrador.cadastrar(usuario, credencial);
+		usuarioRepositorio.save(usuario);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	@PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'VENDEDOR')")
+	@PutMapping("/atualizar/usuariosenha/usuario/{id}")
+	public ResponseEntity<Credencial> atualizarUsuarioCredencialUsuarioSenha(@RequestBody List<CredencialUsuarioSenha> atualizacao, @PathVariable long id, Authentication authentication) {
+		List<Usuario> usuarios = usuarioRepositorio.findAll();
+		Usuario usuario = usuarioSelecionador.selecionar(usuarios, id);
+		
+		String username = authentication.getName();
+	    Usuario usuarioLogado = usuarioSelecionador.selecionadorPorUsername(usuarios, username);
+	    
+	    boolean permissao = verificadorPermissao.verificar(usuarioLogado.getPerfis(),usuario.getPerfis());
+	    
+	    if (permissao == false) {
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+	    }
 		Set<CredencialUsuarioSenha> credenciais = usuario.getCredenciaisUsuarioSenha();
 		CredencialAtualizadorUsuarioSenha atualizador = new CredencialAtualizadorUsuarioSenha();
 		atualizador.atualizar(credenciais, atualizacao);
 		usuarioRepositorio.save(usuario);
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@PutMapping("/atualizar/usuariosenha/{id}")
 	public void atualizarCredencialUsuarioSenha(@RequestBody CredencialUsuarioSenha atualizacao, @PathVariable long id) {
-		CredencialUsuarioSenha credencial = repositorioUsuarioSenha.getById(id);
+		CredencialUsuarioSenha credencial = repositorioUsuarioSenha.findById(id).get();
 		CredencialAtualizadorUsuarioSenha atualizador = new CredencialAtualizadorUsuarioSenha();
 		atualizador.atualizar(credencial, atualizacao);
 		repositorio.save(credencial);
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'VENDEDOR')")
 	@PutMapping("/atualizar/codigobarra/usuario/{id}")
-	public void atualizarUsuarioCredencialCodigoBarra(@RequestBody List<CredencialCodigoBarra> atualizacao, @PathVariable long id) {
+	public ResponseEntity<Credencial> atualizarUsuarioCredencialCodigoBarra(@RequestBody List<CredencialCodigoBarra> atualizacao, @PathVariable long id, Authentication authentication) {
 		List<Usuario> usuarios = usuarioRepositorio.findAll();
 		Usuario usuario = usuarioSelecionador.selecionar(usuarios, id);
+		
+		String username = authentication.getName();
+	    Usuario usuarioLogado = usuarioSelecionador.selecionadorPorUsername(usuarios, username);
+	    
+	    boolean permissao = verificadorPermissao.verificar(usuarioLogado.getPerfis(),usuario.getPerfis());
+	    
+	    if (permissao == false) {
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+	    }
+	    
 		Set<CredencialCodigoBarra> credenciais = usuario.getCredenciaisCodigoBarra();
 		CredencialAtualizadorCodigoBarra atualizador = new CredencialAtualizadorCodigoBarra();
 		atualizador.atualizar(credenciais, atualizacao);
 		usuarioRepositorio.save(usuario);
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@PutMapping("/atualizar/codigobarra/{id}")
 	public void atualizarCredencialCodigoBarra(@RequestBody CredencialCodigoBarra atualizacao, @PathVariable long id) {
-		CredencialCodigoBarra credencial = repositorioCodigoBarra.getById(id);
+		CredencialCodigoBarra credencial = repositorioCodigoBarra.findById(id).get();
 		CredencialAtualizadorCodigoBarra atualizador = new CredencialAtualizadorCodigoBarra();
 		atualizador.atualizar(credencial, atualizacao);
 		repositorio.save(credencial);
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@DeleteMapping("/excluir/{id}")
 	public void excluirCredencial(@PathVariable long id) {
-		Credencial credencial = repositorio.getById(id);
+		Credencial credencial = repositorio.findById(id).get();
 		CredencialExcluidor credencialExcluidor = new CredencialExcluidor();
 		credencialExcluidor.excluir(credencial, credencial);
 		repositorio.save(credencial);

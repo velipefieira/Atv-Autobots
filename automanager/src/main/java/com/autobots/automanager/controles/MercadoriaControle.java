@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,6 +53,7 @@ public class MercadoriaControle {
 	@Autowired
 	private MercadoriaCadastrador cadastrador;
 
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE', 'VENDEDOR')")
 	@GetMapping("/{id}")
 	public ResponseEntity<Mercadoria> obterMercadoria(@PathVariable long id) {
 		List<Mercadoria> mercadorias = repositorio.findAll();
@@ -66,6 +68,7 @@ public class MercadoriaControle {
 		}
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'VENDEDOR')")
 	@GetMapping("/mercadorias")
 	public ResponseEntity<List<Mercadoria>> obterMercadorias() {
 		List<Mercadoria> mercadorias = repositorio.findAll();
@@ -79,7 +82,7 @@ public class MercadoriaControle {
 		}
 	}
 
-
+	@PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'VENDEDOR')")
 	@GetMapping("/mercadoria/{id}")
 	public ResponseEntity<List<Mercadoria>> obterempresaMercadoria(@PathVariable long id) {
 		List<Empresa> empresas = empresaRepositorio.findAll();
@@ -95,8 +98,8 @@ public class MercadoriaControle {
 		}
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
 	@PostMapping("/cadastro/{id}")
-	@Transactional
 	public void cadastrarMercadoria(@RequestBody List<Mercadoria> Mercadoria, @PathVariable long id) {
 		List<Empresa> empresas = empresaRepositorio.findAll();
 		Empresa empresa = empresaSelecionador.selecionar(empresas, id);
@@ -104,6 +107,7 @@ public class MercadoriaControle {
 		empresaRepositorio.save(empresa);
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
 	@PutMapping("/atualizar/{id}")
 	public void atualizarMercadoria(@RequestBody Mercadoria atualizacao, @PathVariable long id) {
 		List<Mercadoria> mercadorias = repositorio.findAll();
@@ -113,8 +117,8 @@ public class MercadoriaControle {
 		repositorio.save(mercadoria);
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
 	@PutMapping("/atualizar/empresa/{id}")
-	@Transactional
 	public void atualizarEmpresaMercadoria(@RequestBody List<Mercadoria> atualizacao, @PathVariable long id) {
 		List<Empresa> empresas = empresaRepositorio.findAll();
 		Empresa empresa = empresaSelecionador.selecionar(empresas, id);
@@ -123,9 +127,10 @@ public class MercadoriaControle {
 		empresaRepositorio.save(empresa);
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
 	@DeleteMapping("/excluir/empresa/{id}")
 	public void excluirEmpresaMercadoria(@RequestBody List<Mercadoria> mercadorias, @PathVariable long id) {
-		Empresa empresa = empresaRepositorio.getById(id);
+		Empresa empresa = empresaRepositorio.findById(id).get();
 		excluidor.excluir(empresa, mercadorias);
 		empresaRepositorio.save(empresa);
 	}

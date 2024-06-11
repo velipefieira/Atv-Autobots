@@ -58,7 +58,7 @@ public class VendaCadastrador {
 						
 			Usuario funcionario = usuarioRepositorio.findById(venda.getFuncionario()).get();
 			if (funcionario != null) {
-				novaVenda.setFuncionario(funcionario);
+				novaVenda.setVendedor(funcionario);
 				funcionario.getVendas().add(novaVenda);
 			}
 			

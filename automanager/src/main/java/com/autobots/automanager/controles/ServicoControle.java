@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,6 +48,7 @@ public class ServicoControle {
 	@Autowired
 	ServicoCadastrador cadastrador;
 
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE', 'VENDEDOR')")
 	@GetMapping("/{id}")
 	public ResponseEntity<Servico> obterServico(@PathVariable long id) {
 		List<Servico> servicos = repositorio.findAll();
@@ -61,6 +63,7 @@ public class ServicoControle {
 		}
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE', 'VENDEDOR')")
 	@GetMapping("/servicos")
 	public ResponseEntity<List<Servico>> obterServicos() {
 		List<Servico> servicos = repositorio.findAll();
@@ -74,7 +77,7 @@ public class ServicoControle {
 		}
 	}
 
-
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE', 'VENDEDOR')")
 	@GetMapping("/servico/{id}")
 	public ResponseEntity<List<Servico>> obterempresaServico(@PathVariable long id) {
 		List<Empresa> empresas = empresaRepositorio.findAll();
@@ -90,6 +93,7 @@ public class ServicoControle {
 		}
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
 	@PostMapping("/cadastro/{id}")
 	public void cadastrarServico(@RequestBody List<Servico> Servico, @PathVariable long id) {
 		List<Empresa> empresas = empresaRepositorio.findAll();
@@ -98,6 +102,7 @@ public class ServicoControle {
 		empresaRepositorio.save(empresa);
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
 	@PutMapping("/atualizar/{id}")
 	public void atualizarServico(@RequestBody Servico atualizacao, @PathVariable long id) {
 		List<Servico> servicos = repositorio.findAll();
@@ -107,6 +112,7 @@ public class ServicoControle {
 		repositorio.save(servico);
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
 	@PutMapping("/atualizar/empresa/{id}")
 	public void atualizarEmpresaServico(@RequestBody List<Servico> atualizacao, @PathVariable long id) {
 		List<Empresa> empresas = empresaRepositorio.findAll();
@@ -116,9 +122,10 @@ public class ServicoControle {
 		empresaRepositorio.save(empresa);
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
 	@DeleteMapping("/excluir/{id}")
 	public void excluirempresaServico(@PathVariable long id) {
-		Servico servico = repositorio.getById(id);
+		Servico servico = repositorio.findById(id).get();
 		repositorio.delete(servico);
 	}
 }

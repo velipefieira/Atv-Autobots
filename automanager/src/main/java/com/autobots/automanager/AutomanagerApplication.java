@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.autobots.automanager.entidades.CredencialUsuarioSenha;
 import com.autobots.automanager.entidades.Documento;
@@ -26,8 +27,11 @@ import com.autobots.automanager.repositorios.EmpresaRepositorio;
 @SpringBootApplication
 public class AutomanagerApplication implements CommandLineRunner {
 
+	BCryptPasswordEncoder codificador = new BCryptPasswordEncoder();
+
 	@Autowired
 	private EmpresaRepositorio repositorioEmpresa;
+	
 
 	public static void main(String[] args) {
 		SpringApplication.run(AutomanagerApplication.class, args);
@@ -60,7 +64,7 @@ public class AutomanagerApplication implements CommandLineRunner {
 		Usuario funcionario = new Usuario();
 		funcionario.setNome("Pedro Alcântara de Bragança e Bourbon");
 		funcionario.setNomeSocial("Dom Pedro");
-		funcionario.getPerfis().add(PerfilUsuario.FUNCIONARIO);
+		funcionario.getPerfis().add(PerfilUsuario.ROLE_VENDEDOR);
 
 		Email emailFuncionario = new Email();
 		emailFuncionario.setEndereco("a@a.com");
@@ -95,7 +99,7 @@ public class AutomanagerApplication implements CommandLineRunner {
 		CredencialUsuarioSenha credencialFuncionario = new CredencialUsuarioSenha();
 		credencialFuncionario.setInativo(false);
 		credencialFuncionario.setNomeUsuario("dompedrofuncionario");
-		credencialFuncionario.setSenha("123456");
+		credencialFuncionario.setSenha(codificador.encode("123456"));
 		credencialFuncionario.setCriacao(new Date());
 		credencialFuncionario.setUltimoAcesso(new Date());
 
@@ -104,7 +108,7 @@ public class AutomanagerApplication implements CommandLineRunner {
 		Usuario fornecedor = new Usuario();
 		fornecedor.setNome("Componentes varejo de partes automotivas ltda");
 		fornecedor.setNomeSocial("Loja do carro, vendas de componentes automotivos");
-		fornecedor.getPerfis().add(PerfilUsuario.FORNECEDOR);
+		fornecedor.getPerfis().add(PerfilUsuario.ROLE_FORNECEDOR);
 
 		Email emailFornecedor = new Email();
 		emailFornecedor.setEndereco("f@f.com");
@@ -114,7 +118,7 @@ public class AutomanagerApplication implements CommandLineRunner {
 		CredencialUsuarioSenha credencialFornecedor = new CredencialUsuarioSenha();
 		credencialFornecedor.setInativo(false);
 		credencialFornecedor.setNomeUsuario("dompedrofornecedor");
-		credencialFornecedor.setSenha("123456");
+		credencialFornecedor.setSenha(codificador.encode("123456"));
 		credencialFornecedor.setCriacao(new Date());
 		credencialFornecedor.setUltimoAcesso(new Date());
 
@@ -155,7 +159,7 @@ public class AutomanagerApplication implements CommandLineRunner {
 		Usuario cliente = new Usuario();
 		cliente.setNome("Pedro Alcântara de Bragança e Bourbon");
 		cliente.setNomeSocial("Dom pedro cliente");
-		cliente.getPerfis().add(PerfilUsuario.CLIENTE);
+		cliente.getPerfis().add(PerfilUsuario.ROLE_CLIENTE);
 
 		Email emailCliente = new Email();
 		emailCliente.setEndereco("c@c.com");
@@ -172,7 +176,7 @@ public class AutomanagerApplication implements CommandLineRunner {
 		CredencialUsuarioSenha credencialCliente = new CredencialUsuarioSenha();
 		credencialCliente.setInativo(false);
 		credencialCliente.setNomeUsuario("dompedrocliente");
-		credencialCliente.setSenha("123456");
+		credencialCliente.setSenha(codificador.encode("123456"));
 		credencialCliente.setCriacao(new Date());
 		credencialCliente.setUltimoAcesso(new Date());
 
@@ -216,7 +220,7 @@ public class AutomanagerApplication implements CommandLineRunner {
 		venda.setCliente(cliente);
 		venda.getMercadorias().add(rodaLigaLeve);
 		venda.setIdentificacao("1234698745");
-		venda.setFuncionario(funcionario);
+		venda.setVendedor(funcionario);
 		venda.getServicos().add(trocaRodas);
 		venda.getServicos().add(alinhamento);
 		venda.setVeiculo(veiculo);
@@ -250,13 +254,59 @@ public class AutomanagerApplication implements CommandLineRunner {
 		venda2.setCliente(cliente);
 		venda2.getMercadorias().add(rodaLigaLeve2);
 		venda2.setIdentificacao("1234698749");
-		venda2.setFuncionario(funcionario);
+		venda2.setVendedor(funcionario);
 		venda2.getServicos().add(balanceamento);
 		venda2.getServicos().add(alinhamento2);
 		venda2.setVeiculo(veiculo);
 		veiculo.getVendas().add(venda2);
 
 		empresa.getVendas().add(venda2);
+		
+		Usuario adm = new Usuario();
+		adm.setNome("Felipão ADM");
+		adm.setNomeSocial("Felipe Vieira");
+		adm.getPerfis().add(PerfilUsuario.ROLE_ADMIN);
+
+		Email emailAdm = new Email();
+		emailAdm.setEndereco("felipe@gmail.com");
+
+		funcionario.getEmails().add(emailAdm);
+
+		Endereco enderecoAdm = new Endereco();
+		enderecoAdm.setEstado("São Paulo");
+		enderecoAdm.setCidade("São Paulo");
+		enderecoAdm.setBairro("Jardins");
+		enderecoAdm.setRua("Av. São Gabriel");
+		enderecoAdm.setNumero("00");
+		enderecoAdm.setCodigoPostal("01435-001");
+
+		adm.setEndereco(enderecoAdm);
+
+		empresa.getUsuarios().add(funcionario);
+
+		Telefone telefoneAdm = new Telefone();
+		telefoneAdm.setDdd("011");
+		telefoneAdm.setNumero("991099999");
+
+		adm.getTelefones().add(telefoneAdm);
+
+		Documento passaporte = new Documento();
+		passaporte.setDataEmissao(new Date());
+		passaporte.setNumero("1234567");
+		passaporte.setTipo(TipoDocumento.PASSAPORTE);
+
+		adm.getDocumentos().add(passaporte);
+
+		CredencialUsuarioSenha credencialAdm = new CredencialUsuarioSenha();
+		credencialAdm.setInativo(false);
+		credencialAdm.setNomeUsuario("felipe");
+		credencialAdm.setSenha(codificador.encode("123"));
+		credencialAdm.setCriacao(new Date());
+		credencialAdm.setUltimoAcesso(new Date());
+
+		adm.getCredenciais().add(credencialAdm);
+		
+		empresa.getUsuarios().add(adm);
 		
 		repositorioEmpresa.save(empresa);
 	}

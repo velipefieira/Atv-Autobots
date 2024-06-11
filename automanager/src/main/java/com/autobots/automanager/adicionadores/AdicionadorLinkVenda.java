@@ -56,7 +56,7 @@ public class AdicionadorLinkVenda implements AdicionadorLink<Venda> {
 						.obterVendas())
 				.withRel("vendas");
 		venda.add(linkProprio);
-		adicionadorLinkUsuario.adicionarLink(venda.getFuncionario());
+		adicionadorLinkUsuario.adicionarLink(venda.getVendedor());
 		adicionadorLinkUsuario.adicionarLink(venda.getCliente());
 		List<Mercadoria> mercadorias = venda.getMercadorias().stream().collect(Collectors.toList());
 		adicionadorLinkMercadoria.adicionarLink(mercadorias);

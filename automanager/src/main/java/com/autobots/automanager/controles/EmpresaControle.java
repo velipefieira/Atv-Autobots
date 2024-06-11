@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +36,7 @@ public class EmpresaControle {
 	@Autowired
 	private EmpresaSelecionador selecionador;
 	
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@GetMapping("/{id}")
 	public ResponseEntity<Empresa> obterEmpresa(@PathVariable long id) {
 		List<Empresa> empresas = repositorio.findAll();
@@ -49,6 +51,7 @@ public class EmpresaControle {
 		}
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@GetMapping("/empresas")
 	public ResponseEntity<List<Empresa>> obterEmpresas() {
 		List<Empresa> empresas = repositorio.findAll();
@@ -62,6 +65,7 @@ public class EmpresaControle {
 		}
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@PostMapping("/cadastro")
 	public void cadastrarEmpresa(@RequestBody EmpresaDto empresa) {
 		EmpresaCadastrador cadastrador = new EmpresaCadastrador();
@@ -69,17 +73,19 @@ public class EmpresaControle {
 		repositorio.save(novaEmpresa);
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@PutMapping("/atualizar/{id}")
 	public void atualizarEmpresa(@RequestBody EmpresaDto atualizacao, @PathVariable long id) {
-		Empresa empresa = repositorio.getById(id);
+		Empresa empresa = repositorio.findById(id).get();
 		EmpresaAtualizador atualizador = new EmpresaAtualizador();
 		atualizador.atualizar(empresa, atualizacao);
 		repositorio.save(empresa);
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@DeleteMapping("/excluir/{id}")
 	public void excluirEmpresa(@PathVariable long id) {
-		Empresa empresa = repositorio.getById(id);
+		Empresa empresa = repositorio.findById(id).get();
 		repositorio.delete(empresa);
 	}
 }

@@ -67,6 +67,7 @@ public class Usuario extends RepresentationModel<Usuario>{
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
 	private Set<Veiculo> veiculos = new HashSet<>();
     
+	
     public Set<CredencialUsuarioSenha> getCredenciaisUsuarioSenha() {
         Set<CredencialUsuarioSenha> credenciaisUsuarioSenha = new HashSet<>();
         for (Credencial credencial : credenciais) {
@@ -85,5 +86,23 @@ public class Usuario extends RepresentationModel<Usuario>{
             }
         }
         return credenciais;
+    }
+    
+	public CredencialUsuarioSenha getCredencialUsuarioSenha() {
+	    for (Credencial credencial : credenciais) {
+	        if (credencial instanceof CredencialUsuarioSenha) {
+	            return (CredencialUsuarioSenha) credencial;
+	        }
+	    }
+	    return null;
+	}
+	
+    public CredencialCodigoBarra getCredencialCodigoBarra() {
+	    for (Credencial credencial : credenciais) {
+	        if (credencial instanceof CredencialCodigoBarra) {
+	            return (CredencialCodigoBarra) credencial;
+	        }
+	    }
+        return null;
     }
 }

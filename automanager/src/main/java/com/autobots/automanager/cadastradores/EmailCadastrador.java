@@ -2,10 +2,13 @@ package com.autobots.automanager.cadastradores;
 
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import com.autobots.automanager.entidades.Email;
 import com.autobots.automanager.entidades.Usuario;
 import com.autobots.automanager.modelos.StringVerificadorNulo;
 
+@Service
 public class EmailCadastrador {
 	private StringVerificadorNulo verificador = new StringVerificadorNulo();
 

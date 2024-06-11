@@ -3,12 +3,16 @@ package com.autobots.automanager.cadastradores;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import com.autobots.automanager.entidades.CredencialUsuarioSenha;
 import com.autobots.automanager.entidades.Usuario;
 import com.autobots.automanager.modelos.StringVerificadorNulo;
 
 public class CredencialUsuarioSenhaCadastrador {
 	private StringVerificadorNulo verificador = new StringVerificadorNulo();
+	
+	BCryptPasswordEncoder codificador = new BCryptPasswordEncoder();
 
 	public void cadastrar(Usuario usuario, CredencialUsuarioSenha credencial) {
 		if (credencial != null) {
@@ -20,7 +24,7 @@ public class CredencialUsuarioSenhaCadastrador {
 				novoCredencial.setNomeUsuario(credencial.getNomeUsuario());
 			}
 			if (!verificador.verificar(credencial.getSenha())) {
-				novoCredencial.setSenha(credencial.getSenha());
+				novoCredencial.setSenha(codificador.encode(credencial.getSenha()));
 			}
 			usuario.getCredenciais().add(novoCredencial);
 		}

@@ -54,7 +54,7 @@ public class VendaAtualizador {
 						
 			Usuario funcionario = usuarioRepositorio.findById(atualizacao.getFuncionario()).get();
 			if (funcionario != null) {
-				venda.setFuncionario(funcionario);
+				venda.setVendedor(funcionario);
 			}
 			
 			Veiculo veiculo = veiculoRepositorio.findById(atualizacao.getVeiculo()).get();
